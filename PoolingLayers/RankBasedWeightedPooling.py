@@ -7,7 +7,6 @@ class RankBasedWeightedPoolingLayer(tf.keras.layers.Layer):
         self.stride = stride
         self.pool_area_size = pool_size*pool_size
         self.init_probabilities = [[[(alpha*pow(1-alpha, r))] for r in range(self.pool_area_size)]]
-<<<<<<< HEAD
         #self.init_probabilities = [[[(self.alpha * pow(self.alpha, self.pool_area_size-1-k))] for k in range(self.pool_area_size)]]
         super(RankBasedWeightedPoolingLayer, self).__init__(**kwargs)
         
@@ -59,36 +58,6 @@ class RankBasedWeightedPoolingLayer(tf.keras.layers.Layer):
             return(tf.reduce_sum(scaled_area, axis=1))
     
         output_shape = [-1, tf.cast(inputs.shape[1]/self.stride, dtype=tf.int32), tf.cast(inputs.shape[2]/self.stride, dtype=tf.int32), inputs.shape[3]]
-=======
-        super(RankBasedWeightedPoolingLayer, self).__init__(**kwargs)
-        
-    def build(self, input_shape):
-        number_of_steps_height = int(input_shape[1]/self.pool_size)
-        number_of_steps_width = int(input_shape[2]/self.pool_size)
-        self.areas = [(
-            h * self.pool_size,
-            w * self.pool_size,
-            (h+1) * self.pool_size,
-            (w+1) * self.pool_size,
-        )
-         for h in range(number_of_steps_width)
-        for w in range(number_of_steps_height)]
-
-        self.tf_areas = tf.constant(self.areas, dtype=tf.float32)
-        self.channel_probs = tf.repeat(self.init_probabilities, repeats=input_shape[3], axis=2)
-        #self.final_probs = tf.repeat(self.channel_probs, repeats=input_shape[0], axis=0)
-
-    def call(self, inputs):
-        def pool_areas(pool_window):
-            pool_area = inputs[:,tf.cast(pool_window[0], dtype=tf.int32):tf.cast(pool_window[2], dtype=tf.int32), tf.cast(pool_window[1], dtype=tf.int32):tf.cast(pool_window[3], dtype=tf.int32),:]
-            reshaped_pool_area = tf.reshape(pool_area, shape=(-1,self.pool_area_size, pool_area.shape[3]))
-            sorted_pool_area = tf.sort(reshaped_pool_area, axis=1, direction="DESCENDING")
-            final_probs = tf.repeat(self.channel_probs, repeats=tf.shape(pool_area)[0], axis=0)
-            weighted_pool_area = tf.multiply(sorted_pool_area, final_probs)
-            return tf.reduce_sum(weighted_pool_area, axis=1)
-    
-        output_shape = [-1, tf.cast(inputs.shape[1]/self.pool_size, dtype=tf.int32), tf.cast(inputs.shape[2]/self.pool_size, dtype=tf.int32), inputs.shape[3]]
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4
         output = tf.map_fn(pool_areas, self.tf_areas, fn_output_signature=tf.float32)
         output = tf.transpose(output, perm=[1,0,2])
         output = tf.reshape(output, shape=output_shape)
@@ -118,7 +87,4 @@ class RankBasedWeightedPoolingLayer(tf.keras.layers.Layer):
             "pool_size": self.pool_size,
             "stride": self.stride
         })
-<<<<<<< HEAD
         return config
-=======
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4

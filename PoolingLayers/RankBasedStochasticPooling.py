@@ -10,7 +10,6 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
         super(RankBasedStochasticPoolingLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
-<<<<<<< HEAD
         number_of_steps_height = int(input_shape[1]/self.stride)
         number_of_steps_width = int(input_shape[2]/self.stride)
         self.areas = [(
@@ -18,22 +17,12 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
             w * self.stride,
             h * self.stride + self.pool_size if h+1<number_of_steps_height else input_shape[1],
             w * self.stride + self.pool_size if w+1<number_of_steps_width else input_shape[2],
-=======
-        number_of_steps_height = int(input_shape[1]/self.pool_size)
-        number_of_steps_width = int(input_shape[2]/self.pool_size)
-        self.areas = [(
-            h * self.pool_size,
-            w * self.pool_size,
-            (h+1) * self.pool_size,
-            (w+1) * self.pool_size,
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4
         )
          for h in range(number_of_steps_width)
         for w in range(number_of_steps_height)]
 
         self.tf_areas = tf.constant(self.areas, dtype=tf.float32)
 
-<<<<<<< HEAD
         self.edge_pool_window = self.tf_areas[int(input_shape[1]/self.stride)-1]
         self.edge_pool_area_size = int((self.edge_pool_window[3] - self.edge_pool_window[1]) * self.pool_size)
         self.br_pool_window = self.tf_areas[-1]
@@ -44,11 +33,6 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
     def call(self, inputs):
         #self.batch_probs = tf.repeat(self.init_probabilities, repeats=tf.shape(inputs)[0], axis=0)
         @tf.function
-=======
-    @tf.function
-    def call(self, inputs):
-        self.batch_probs = tf.repeat(self.init_probabilities, repeats=tf.shape(inputs)[0], axis=0)
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4
         def pool_areas(pool_window):
             """
             Fetch the pool area from the feature map
@@ -57,10 +41,7 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
             Produce a one hot encoding from these result and multiply it with the pool area
             Afterwards sum up the results of the channels, which will be only zeros except the chosen activation
             """
-<<<<<<< HEAD
             """
-=======
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4
             pool_area = inputs[:,tf.cast(pool_window[0], dtype=tf.int32):tf.cast(pool_window[2], dtype=tf.int32), tf.cast(pool_window[1], dtype=tf.int32):tf.cast(pool_window[3], dtype=tf.int32),:]
             reshaped_area = tf.reshape(pool_area, shape=(-1, self.pool_area_size, pool_area.shape[3]))
             sorted_area = tf.sort(reshaped_area, axis=1, direction="DESCENDING")
@@ -69,7 +50,6 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
             one_hot = tf.transpose(one_hot, perm=[0,2,1])
             result = tf.multiply(one_hot, sorted_area)
             return tf.reduce_sum(result, axis=1)
-<<<<<<< HEAD
             """
             pool_area = inputs[:,tf.cast(pool_window[0], dtype=tf.int32):tf.cast(pool_window[2], dtype=tf.int32), tf.cast(pool_window[1], dtype=tf.int32):tf.cast(pool_window[3], dtype=tf.int32),:]
             pool_area_shape = tf.shape(pool_area, out_type=tf.int32)
@@ -97,10 +77,6 @@ class RankBasedStochasticPoolingLayer(tf.keras.layers.Layer):
             return(tf.reduce_sum(result, axis=1))
 
         output_shape = [-1, tf.cast(inputs.shape[1]/self.stride, dtype=tf.int32), tf.cast(inputs.shape[2]/self.stride, dtype=tf.int32), inputs.shape[3]]
-=======
-
-        output_shape = [-1, tf.cast(inputs.shape[1]/self.pool_size, dtype=tf.int32), tf.cast(inputs.shape[2]/self.pool_size, dtype=tf.int32), inputs.shape[3]]
->>>>>>> 0320eb77585aefd3f33e868fa588b6391ccdb9b4
         output = tf.map_fn(pool_areas, self.tf_areas, fn_output_signature=tf.float32)
         output = tf.transpose(output, perm=[1,0,2])
         output = tf.reshape(output, shape=output_shape)
